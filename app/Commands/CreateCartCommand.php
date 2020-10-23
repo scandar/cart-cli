@@ -2,16 +2,17 @@
 
 namespace App\Commands;
 
+use App\Core\CartService;
 use LaravelZero\Framework\Commands\Command;
 
-class CheckoutCommand extends Command
+class CreateCartCommand extends Command
 {
     /**
      * The signature of the command.
      *
      * @var string
      */
-    protected $signature = 'checkout
+    protected $signature = 'create
                             {--bill-currency=USD : currency type EGP,USD (optional)}
                             {items* : a list of item names (required)}';
 
@@ -27,7 +28,9 @@ class CheckoutCommand extends Command
      *
      * @return mixed
      */
-    public function handle()
+    public function handle(CartService $cartService)
     {
+        // dd($this->options());
+        $cartService->create($this->argument('items'), $this->option('bill-currency'));
     }
 }
