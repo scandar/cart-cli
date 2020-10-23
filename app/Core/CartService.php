@@ -18,7 +18,7 @@ class CartService
         $this->setItems($items);
         // calculate offers
         // calculate taxes
-        // calculate
+        // format output
     }
 
     private function setCurrency(string $currency): void
