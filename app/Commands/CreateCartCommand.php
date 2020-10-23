@@ -30,7 +30,6 @@ class CreateCartCommand extends Command
      */
     public function handle(CartService $cartService)
     {
-        // dd($this->options());
         $cartService->create($this->argument('items'), $this->option('bill-currency'));
     }
 }

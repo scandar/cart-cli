@@ -21,7 +21,8 @@
     },
     "require-dev": {
         "mockery/mockery": "^1.4.2",
-        "pestphp/pest": "^0.3"
+        "pestphp/pest": "^0.3",
+        "pestphp/pest-plugin-faker": "^0.3.0"
     },
     "autoload": {
         "psr-4": {
