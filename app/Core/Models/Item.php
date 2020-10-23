@@ -4,6 +4,7 @@ namespace App\Core\Models;
 
 class Item extends BaseModel
 {
-    protected $name;
-    protected $price;
+    public string $name;
+    protected int $price;
+    public ?Offer $offer = null;
 }

@@ -13,7 +13,7 @@ class BaseModel
         }
     }
 
-    public function setProp(string $name, $value)
+    public function setProp(string $name, $value): void
     {
         if (!property_exists(get_class($this), $name)) {
             throw new InvalidPropertyException("Invalid propery {$name}");

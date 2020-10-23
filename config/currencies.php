@@ -9,7 +9,7 @@
 return [
     'default' => 'usd',
     'available' => [
-        'usd' => 1,
+        'usd' => 1.0,
         'egp' => 15.7,
     ],
 ];

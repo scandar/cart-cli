@@ -3,20 +3,22 @@
 namespace App\Core;
 
 use App\Core\Models\Item;
+use App\Core\Models\Offer;
 use App\Exceptions\InvalidCurrencyException;
 use App\Exceptions\InvalidItemsException;
+use Illuminate\Support\Collection;
 
 class CartService
 {
-    private $currency;
-    private $conversionRate;
-    private $items;
+    private string $currency;
+    private float $conversionRate;
+    private ?Collection $items;
 
     public function create(array $items, string $currency)
     {
         $this->setCurrency($currency);
         $this->setItems($items);
-        // calculate offers
+        $this->setOffers();
         // calculate taxes
         // format output
     }
@@ -37,16 +39,15 @@ class CartService
         $this->conversionRate = $currencies[$currency];
     }
 
-
     private function setItems(array $itemNames): void
     {
         $itemNames = array_map('strtolower', $itemNames);
         $this->validateItems($itemNames);
-        $avaialableItems = config('items');
+        $availableItems = config('items');
         $this->items = collect();
 
         foreach ($itemNames as $name) {
-            $itemInfo = $avaialableItems[$name];
+            $itemInfo = $availableItems[$name];
             $item = new Item(['name' => $name, 'price' => $itemInfo['price']]);
             $this->items->push($item);
         }
@@ -62,5 +63,38 @@ class CartService
             $invalidItemsString = implode(', ', $invalidItems);
             throw new InvalidItemsException("Sorry, but these items are not available. ({$invalidItemsString})");
         }
+    }
+
+    private function setOffers(): void
+    {
+        $offers = config('offers');
+        $items = $this->items->groupBy('name')->map->count();
+
+        foreach ($items as $name => $amount) {
+            if (array_key_exists($name, $offers)) {
+                $offer = $offers[$name];
+                $this->applyOffer($amount, $offer);
+            }
+        }
+    }
+
+    private function applyOffer(int $amount, array $offer): ?callable
+    {
+        if ($amount < $offer['should_buy']) return null;
+
+        $item = $this->items->where('name', $offer['item'])->whereNull('offer')->first();
+        if (!$item) return null;
+
+        $item->setProp(
+            'offer',
+            new Offer([
+                'title' => "{$offer['discount_percent']}% off {$offer['item']}",
+                'percent' => $offer['discount_percent']
+            ])
+        );
+
+        $amount = $amount - $offer['should_buy'];
+        if (!$amount) return null;
+        return $this->applyOffer($amount, $offer);
     }
 }

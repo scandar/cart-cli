@@ -1,6 +1,8 @@
 <?php
 
 use App\Core\CartService;
+use App\Core\Models\Item;
+use App\Core\Models\Offer;
 use App\Exceptions\InvalidCurrencyException;
 use App\Exceptions\InvalidItemsException;
 use Illuminate\Support\Arr;
@@ -24,7 +26,7 @@ it('sets currency', function () {
     expect($currencyProperty->getValue($cartService))->toBe($currentCurrency);
 
     $conversionRateProperty = privateProperty($reflection, 'conversionRate');
-    expect($conversionRateProperty->getValue($cartService))->toBe($currencies[$currentCurrency]);
+    expect($conversionRateProperty->getValue($cartService))->toBe((float) $currencies[$currentCurrency]);
 });
 
 it('throws an excepton if currency is invalid', function () {
@@ -56,4 +58,29 @@ it('throws exception on invalid items', function () {
     $reflection = reflection($cartService);
     $setItems = privateMethod($reflection, 'setItems');
     $setItems->invokeArgs($cartService, [[faker()->word]]);
+});
+
+it('calculates and sets offers on items', function () {
+    $cartService = new CartService();
+    $reflection = reflection($cartService);
+    $itemsProperty = privateProperty($reflection, 'items');
+    $items = collect([
+        new Item(['name' => 'shoes', 'price' => 1000]),
+        new Item(['name' => 't-shirt', 'price' => 1100]),
+        new Item(['name' => 't-shirt', 'price' => 1100]),
+        new Item(['name' => 'jacket', 'price' => 2000]),
+    ]);
+
+    $itemsProperty->setValue($cartService, $items);
+    $setOffers = privateMethod($reflection, 'setOffers');
+    $setOffers->invokeArgs($cartService, []);
+
+    $itemsCollection = $itemsProperty->getValue($cartService);
+    expect($itemsCollection->where('name', 'jacket')->first()->offer)->toBeInstanceOf(Offer::class);
+    expect($itemsCollection->where('name', 'jacket')->first()->offer->percent)->toBe(50.0);
+
+    expect($itemsCollection->where('name', 'shoes')->first()->offer)->toBeInstanceOf(Offer::class);
+    expect($itemsCollection->where('name', 'shoes')->first()->offer->percent)->toBe(10.0);
+
+    expect($itemsCollection->where('name', 't-shirt')->first()->offer)->toBeNull();
 });
