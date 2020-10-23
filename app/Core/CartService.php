@@ -9,18 +9,23 @@ use App\Exceptions\InvalidItemsException;
 class CartService
 {
     private $currency;
+    private $conversionRate;
     private $items;
 
     public function create(array $items, string $currency)
     {
         $this->setCurrency($currency);
         $this->setItems($items);
+        // calculate offers
+        // calculate taxes
+        // calculate
     }
 
     private function setCurrency(string $currency): void
     {
         $currency = strtolower($currency);
-        $avaialableCurrencies = array_keys(config('currencies.available'));
+        $currencies = config('currencies.available');
+        $avaialableCurrencies = array_keys($currencies);
 
         if (!in_array($currency, $avaialableCurrencies)) {
             $currency = strtoupper($currency);
@@ -29,6 +34,7 @@ class CartService
         }
 
         $this->currency = $currency;
+        $this->conversionRate = $currencies[$currency];
     }
 
 

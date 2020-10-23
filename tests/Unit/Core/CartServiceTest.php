@@ -9,7 +9,8 @@ use function Tests\reflection;
 use function Pest\Faker\faker;
 
 it('sets currency', function () {
-    $availableCurrencies = array_keys(config('currencies.available'));
+    $currencies = config('currencies.available');
+    $availableCurrencies = array_keys($currencies);
     $cartService = new CartService();
     $reflection = reflection($cartService);
     $setCurrency = $reflection->getMethod('setCurrency');
@@ -20,6 +21,10 @@ it('sets currency', function () {
     $currencyProperty = $reflection->getProperty('currency');
     $currencyProperty->setAccessible(true);
     expect($currencyProperty->getValue($cartService))->toBe($currentCurrency);
+
+    $conversionRateProperty = $reflection->getProperty('conversionRate');
+    $conversionRateProperty->setAccessible(true);
+    expect($conversionRateProperty->getValue($cartService))->toBe($currencies[$currentCurrency]);
 });
 
 it('throws an excepton if currency is invalid', function () {
@@ -42,10 +47,10 @@ it('sets items', function () {
     $currentItem = Arr::random($availableItems);
     $setItems->invokeArgs($cartService, [[$currentItem]]);
 
-    $currencyProperty = $reflection->getProperty('items');
-    $currencyProperty->setAccessible(true);
+    $itemsProperty = $reflection->getProperty('items');
+    $itemsProperty->setAccessible(true);
 
-    $firstItem = $currencyProperty->getValue($cartService)->first();
+    $firstItem = $itemsProperty->getValue($cartService)->first();
     expect($firstItem->name)->toBe($currentItem);
     expect($firstItem->price)->toBe(config('items')[$currentItem]['price']);
 });
