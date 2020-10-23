@@ -15,12 +15,12 @@
 return [
     'shoes' => [
         'should_buy' => 1,
-        'discount_percent' => 10.0,
+        'discount_percent' => 0.10,
         'item' => 'shoes',
     ],
     't-shirt' => [
         'should_buy' => 2,
-        'discount_percent' => 50.0,
+        'discount_percent' => 0.50,
         'item' => 'jacket',
     ],
 ];

@@ -80,10 +80,31 @@ it('calculates and sets offers on items', function () {
 
     $itemsCollection = $itemsProperty->getValue($cartService);
     expect($itemsCollection->where('name', 'jacket')->first()->offer)->toBeInstanceOf(Offer::class);
-    expect($itemsCollection->where('name', 'jacket')->first()->offer->percent)->toBe(50.0);
+    expect($itemsCollection->where('name', 'jacket')->first()->offer->percent)->toBe(0.50);
 
     expect($itemsCollection->where('name', 'shoes')->first()->offer)->toBeInstanceOf(Offer::class);
-    expect($itemsCollection->where('name', 'shoes')->first()->offer->percent)->toBe(10.0);
+    expect($itemsCollection->where('name', 'shoes')->first()->offer->percent)->toBe(0.10);
 
     expect($itemsCollection->where('name', 't-shirt')->first()->offer)->toBeNull();
+});
+
+it('sets taxes', function () {
+    $cartService = new CartService();
+    $reflection = reflection($cartService);
+    $itemsProperty = privateProperty($reflection, 'items');
+    $items = collect([
+        new Item(['name' => 'shoes', 'price' => 1000]),
+        new Item(['name' => 't-shirt', 'price' => 1100]),
+        new Item(['name' => 't-shirt', 'price' => 1100]),
+        new Item(['name' => 'jacket', 'price' => 2000]),
+    ]);
+
+    $itemsProperty->setValue($cartService, $items);
+    $setTaxes = privateMethod($reflection, 'setTaxes');
+    $setTaxes->invokeArgs($cartService, []);
+
+    $taxesProperty = privateProperty($reflection, 'taxes');
+
+    $taxes = $taxesProperty->getValue($cartService);
+    expect($taxes)->toBe($items->sum('price') * config('taxes.vat'));
 });

@@ -13,13 +13,14 @@ class CartService
 {
     private ?Currency $currency;
     private ?Collection $items;
+    private float $taxes;
 
     public function create(array $items, string $currency)
     {
         $this->setCurrency($currency);
         $this->setItems($items);
         $this->setOffers();
-        // calculate taxes
+        $this->setTaxes();
         // format output
     }
 
@@ -39,6 +40,7 @@ class CartService
             'name' => $currency,
             'symbol' => $currencies[$currency]['symbol'],
             'format' => $currencies[$currency]['format'],
+            'conversionRate' => $currencies[$currency]['conversion_rate']
         ]);
     }
 
@@ -99,5 +101,10 @@ class CartService
         $amount = $amount - $offer['should_buy'];
         if (!$amount) return null;
         return $this->applyOffer($amount, $offer);
+    }
+
+    private function setTaxes(): void
+    {
+        $this->taxes = $this->items->sum('price') * config('taxes.vat');
     }
 }
