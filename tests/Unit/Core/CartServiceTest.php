@@ -1,6 +1,7 @@
 <?php
 
 use App\Core\CartService;
+use App\Core\Models\Currency;
 use App\Core\Models\Item;
 use App\Core\Models\Offer;
 use App\Exceptions\InvalidCurrencyException;
@@ -23,10 +24,12 @@ it('sets currency', function () {
     $setCurrency->invokeArgs($cartService, [$currentCurrency]);
 
     $currencyProperty = privateProperty($reflection, 'currency');
-    expect($currencyProperty->getValue($cartService))->toBe($currentCurrency);
-
-    $conversionRateProperty = privateProperty($reflection, 'conversionRate');
-    expect($conversionRateProperty->getValue($cartService))->toBe((float) $currencies[$currentCurrency]);
+    $currencyObject = $currencyProperty->getValue($cartService);
+    expect($currencyObject)->toBeInstanceOf(Currency::class);
+    expect($currencyObject->name)->toBe($currentCurrency);
+    expect($currencyObject->conversionRate)->toBe($currencies[$currentCurrency]['conversion_rate']);
+    expect($currencyObject->symbol)->toBe($currencies[$currentCurrency]['symbol']);
+    expect($currencyObject->format)->toBe($currencies[$currentCurrency]['format']);
 });
 
 it('throws an excepton if currency is invalid', function () {

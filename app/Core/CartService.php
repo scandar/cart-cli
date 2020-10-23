@@ -2,6 +2,7 @@
 
 namespace App\Core;
 
+use App\Core\Models\Currency;
 use App\Core\Models\Item;
 use App\Core\Models\Offer;
 use App\Exceptions\InvalidCurrencyException;
@@ -10,8 +11,7 @@ use Illuminate\Support\Collection;
 
 class CartService
 {
-    private string $currency;
-    private float $conversionRate;
+    private ?Currency $currency;
     private ?Collection $items;
 
     public function create(array $items, string $currency)
@@ -35,8 +35,11 @@ class CartService
             throw new InvalidCurrencyException("{$currency} is not a valid currency. available currencies ({$currenciesString})");
         }
 
-        $this->currency = $currency;
-        $this->conversionRate = $currencies[$currency];
+        $this->currency = new Currency([
+            'name' => $currency,
+            'symbol' => $currencies[$currency]['symbol'],
+            'format' => $currencies[$currency]['format'],
+        ]);
     }
 
     private function setItems(array $itemNames): void
