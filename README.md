@@ -33,6 +33,10 @@ to convert from dollars to cents multiply the amount in dollars to 100 `amount i
 you can add as many currencies as you want the default currency is USD with a conversion rate of `1`
 any other currency should have a conversion rate equal to it's price in dollars (the equivalent amount to 1 US dollar)
 use `config/currencies.php` to add new currencies in the `available` array
+
+`symbol` the currency symbol
+`format` is how the number is represented in text form '#' is where the number should appear 'S' is where the symbol should appear
+
 ```php
 [
     'name' => 'usd',
