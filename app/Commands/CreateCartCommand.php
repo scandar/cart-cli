@@ -34,6 +34,7 @@ class CreateCartCommand extends Command
 
         $this->info("Subtotal: {$output->subtotal}");
         $this->info("Taxes: {$output->taxes}");
+        if ($output->discounts->count()) $this->info('Discounts:');
         foreach ($output->discounts as $line) {
             $this->info("   {$line}");
         }
