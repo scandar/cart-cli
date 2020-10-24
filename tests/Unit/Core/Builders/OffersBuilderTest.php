@@ -1,16 +1,8 @@
 <?php
 
+use App\Core\Builders\OffersBuilder;
 use App\Core\Models\Item;
 use App\Core\Models\Offer;
-use App\Core\Traits\OfferTrait;
-
-use function Tests\privateMethod;
-use function Tests\reflection;
-
-beforeEach(function () {
-    $this->mock = $this->getMockForTrait(OfferTrait::class);
-    $this->reflection = reflection($this->mock);
-});
 
 it('calculates and sets offers on items', function () {
     $items = collect([
@@ -20,8 +12,7 @@ it('calculates and sets offers on items', function () {
         new Item(['name' => 'jacket', 'price' => 2000]),
     ]);
 
-    $getOffers = privateMethod($this->reflection, 'getOffers');
-    $itemsWithOffers = $getOffers->invokeArgs($this->mock, [$items]);
+    $itemsWithOffers = OffersBuilder::make($items);
 
     $jacket = $itemsWithOffers->where('name', 'jacket')->first();
     expect($jacket->offer)->toBeInstanceOf(Offer::class);

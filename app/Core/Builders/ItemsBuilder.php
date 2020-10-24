@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Core\Traits;
+namespace App\Core\Builders;
 
 use App\Core\Models\Item;
 use App\Exceptions\InvalidItemsException;
 use Illuminate\Support\Collection;
 
-trait ItemTrait
+class ItemsBuilder
 {
-    protected function makeItems(array $itemNames): Collection
+    public static function make(array $itemNames): Collection
     {
         $itemNames = array_map('strtolower', $itemNames);
-        $this->validateItems($itemNames);
+        self::validateItems($itemNames);
         $availableItems = config('items');
         $items = collect();
 
@@ -24,7 +24,7 @@ trait ItemTrait
         return $items;
     }
 
-    protected function validateItems(array $itemNames): void
+    protected static function validateItems(array $itemNames): void
     {
         $avaialableItems = array_keys(config('items'));
         $intersect = array_intersect($itemNames, $avaialableItems);

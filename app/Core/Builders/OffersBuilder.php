@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Core\Traits;
+namespace App\Core\Builders;
 
 use App\Core\Models\Offer;
 use Illuminate\Support\Collection;
 
-trait OfferTrait
+class OffersBuilder
 {
-    protected function getOffers(Collection $items): Collection
+    public static function make(Collection $items): Collection
     {
         $offers = config('offers');
         $items = $items->map(fn ($item) => clone $item);
@@ -16,14 +16,14 @@ trait OfferTrait
         foreach ($itemsCount as $name => $amount) {
             if (array_key_exists($name, $offers)) {
                 $offer = $offers[$name];
-                $this->applyOffer($amount, $offer, $items);
+                self::applyOffer($amount, $offer, $items);
             }
         }
 
         return $items;
     }
 
-    protected function applyOffer(int $amount, array $offer, Collection $items): ?Collection
+    public static function applyOffer(int $amount, array $offer, Collection $items): ?Collection
     {
         if ($amount < $offer['should_buy']) return null;
 
@@ -42,6 +42,6 @@ trait OfferTrait
 
         $amount = $amount - $offer['should_buy'];
         if (!$amount) return $items;
-        return $this->applyOffer($amount, $offer, $items);
+        return self::applyOffer($amount, $offer, $items);
     }
 }
