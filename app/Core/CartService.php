@@ -17,14 +17,14 @@ class CartService
 
     private ?Currency $currency;
     private ?Collection $items;
-    private float $taxes;
+    private float $taxes = 0.0;
 
     public function create(array $items, string $currency): Output
     {
         $this->currency = $this->makeCurrency($currency);
         $this->items = $this->makeItems($items);
         $this->taxes = $this->calculateTaxes($this->items->sum('price'));
-        $this->setOffers();
+        $this->items = $this->getOffers($this->items);
         return $this->getOutput();
     }
 

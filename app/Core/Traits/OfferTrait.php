@@ -7,24 +7,27 @@ use Illuminate\Support\Collection;
 
 trait OfferTrait
 {
-    protected function setOffers(): void
+    protected function getOffers(Collection $items): Collection
     {
         $offers = config('offers');
-        $itemsCount = $this->items->groupBy('name')->map->count();
+        $items = $items->map(fn ($item) => clone $item);
+        $itemsCount = $items->groupBy('name')->map->count();
 
         foreach ($itemsCount as $name => $amount) {
             if (array_key_exists($name, $offers)) {
                 $offer = $offers[$name];
-                $this->applyOffer($amount, $offer);
+                $this->applyOffer($amount, $offer, $items);
             }
         }
+
+        return $items;
     }
 
-    protected function applyOffer(int $amount, array $offer): ?callable
+    protected function applyOffer(int $amount, array $offer, Collection $items): ?Collection
     {
         if ($amount < $offer['should_buy']) return null;
 
-        $item = $this->items->where('name', $offer['item'])->whereNull('offer')->first();
+        $item = $items->where('name', $offer['item'])->whereNull('offer')->first();
         if (!$item) return null;
 
         $titlePercentage = $offer['discount_percent'] * 100;
@@ -38,7 +41,7 @@ trait OfferTrait
         );
 
         $amount = $amount - $offer['should_buy'];
-        if (!$amount) return null;
-        return $this->applyOffer($amount, $offer);
+        if (!$amount) return $items;
+        return $this->applyOffer($amount, $offer, $items);
     }
 }
