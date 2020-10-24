@@ -10,20 +10,21 @@ class CurrencyBuilder
     public static function make(string $currency): Currency
     {
         $currency = strtolower($currency);
-        $currencies = config('currencies.available');
-        $avaialableCurrencies = array_keys($currencies);
+        $currencies = collect(config('currencies.available'));
+        $avaialableCurrencies = $currencies->pluck('name');
 
-        if (!in_array($currency, $avaialableCurrencies)) {
+        if (!$avaialableCurrencies->contains($currency)) {
             $currency = strtoupper($currency);
-            $currenciesString = strtoupper(implode(', ', $avaialableCurrencies));
+            $currenciesString = strtoupper(implode(', ', $avaialableCurrencies->toArray()));
             throw new InvalidCurrencyException("{$currency} is not a valid currency. available currencies ({$currenciesString})");
         }
 
+        $currency = $currencies->where('name', $currency)->first();
         return new Currency([
-            'name' => $currency,
-            'symbol' => $currencies[$currency]['symbol'],
-            'format' => $currencies[$currency]['format'],
-            'conversionRate' => $currencies[$currency]['conversion_rate'],
+            'name' => $currency['name'],
+            'symbol' => $currency['symbol'],
+            'format' => $currency['format'],
+            'conversionRate' => $currency['conversion_rate'],
         ]);
     }
 }

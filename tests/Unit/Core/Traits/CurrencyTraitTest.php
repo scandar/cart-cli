@@ -11,7 +11,7 @@ beforeEach(function () {
 });
 
 it('converts currency', function () {
-    $currentCurrency = config('currencies.available.egp');
+    $currentCurrency = config('currencies.available')[0];
     $convert = privateMethod($this->reflection, 'convert');
     expect($convert->invokeArgs($this->mock, [100, $currentCurrency['conversion_rate']]))->toBe($currentCurrency['conversion_rate']);
 });
