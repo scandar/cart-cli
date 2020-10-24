@@ -26,10 +26,17 @@ class CreateCartCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return mixed
+     * @return void
      */
-    public function handle(CartService $cartService)
+    public function handle(CartService $cartService): void
     {
-        $cartService->create($this->argument('items'), $this->option('bill-currency'));
+        $output = $cartService->create($this->argument('items'), $this->option('bill-currency'));
+
+        $this->info("Subtotal: {$output->subtotal}");
+        $this->info("Taxes: {$output->taxes}");
+        foreach ($output->discounts as $line) {
+            $this->info("   {$line}");
+        }
+        $this->info("Total: {$output->total}");
     }
 }

@@ -4,107 +4,53 @@ namespace App\Core;
 
 use App\Core\Models\Currency;
 use App\Core\Models\Item;
-use App\Core\Models\Offer;
-use App\Exceptions\InvalidCurrencyException;
-use App\Exceptions\InvalidItemsException;
+use App\Core\Models\Output;
+use App\Core\Traits\CurrencyTrait;
+use App\Core\Traits\ItemTrait;
+use App\Core\Traits\OfferTrait;
+use App\Core\Traits\TaxTrait;
 use Illuminate\Support\Collection;
 
 class CartService
 {
+    use CurrencyTrait, ItemTrait, OfferTrait, TaxTrait;
+
     private ?Currency $currency;
     private ?Collection $items;
     private float $taxes;
 
-    public function create(array $items, string $currency)
+    public function create(array $items, string $currency): Output
     {
-        $this->setCurrency($currency);
-        $this->setItems($items);
+        $this->currency = $this->makeCurrency($currency);
+        $this->items = $this->makeItems($items);
+        $this->taxes = $this->calculateTaxes($this->items->sum('price'));
         $this->setOffers();
-        $this->setTaxes();
-        // format output
+        return $this->getOutput();
     }
 
-    private function setCurrency(string $currency): void
+    protected function getOutput(): Output
     {
-        $currency = strtolower($currency);
-        $currencies = config('currencies.available');
-        $avaialableCurrencies = array_keys($currencies);
+        $conversionRate = $this->currency->conversionRate;
+        $format = $this->currency->format;
+        $symbol = $this->currency->symbol;
 
-        if (!in_array($currency, $avaialableCurrencies)) {
-            $currency = strtoupper($currency);
-            $currenciesString = strtoupper(implode(', ', $avaialableCurrencies));
-            throw new InvalidCurrencyException("{$currency} is not a valid currency. available currencies ({$currenciesString})");
-        }
+        $subtotal = $this->convert($this->items->sum('price'), $conversionRate);
+        $taxes = $this->convert($this->taxes, $conversionRate);
+        $discounts = $this->items->whereNotNull('offer')->map(function (Item $item) use ($conversionRate) {
+            return (object) [
+                'title' => $item->offer->title,
+                'amount' => $this->convert($item->offer->discount, $conversionRate),
+            ];
+        });
+        $total = $subtotal + $taxes - $discounts->sum('amount');
 
-        $this->currency = new Currency([
-            'name' => $currency,
-            'symbol' => $currencies[$currency]['symbol'],
-            'format' => $currencies[$currency]['format'],
-            'conversionRate' => $currencies[$currency]['conversion_rate']
+        return new Output([
+            'subtotal' => $this->formatCurrency($subtotal, $format, $symbol),
+            'taxes' => $this->formatCurrency($taxes, $format, $symbol),
+            'total' => $this->formatCurrency($total, $format, $symbol),
+            'discounts' =>  $discounts->map(function ($discount) use ($format, $symbol) {
+                return "{$discount->title}: -{$this->formatCurrency($discount->amount,$format,$symbol)}";
+            }),
         ]);
-    }
-
-    private function setItems(array $itemNames): void
-    {
-        $itemNames = array_map('strtolower', $itemNames);
-        $this->validateItems($itemNames);
-        $availableItems = config('items');
-        $this->items = collect();
-
-        foreach ($itemNames as $name) {
-            $itemInfo = $availableItems[$name];
-            $item = new Item(['name' => $name, 'price' => $itemInfo['price']]);
-            $this->items->push($item);
-        }
-    }
-
-    private function validateItems(array $itemNames): void
-    {
-        $avaialableItems = array_keys(config('items'));
-        $intersect = array_intersect($itemNames, $avaialableItems);
-        $invalidItems = array_diff($itemNames, $intersect);
-
-        if (!empty($invalidItems)) {
-            $invalidItemsString = implode(', ', $invalidItems);
-            throw new InvalidItemsException("Sorry, but these items are not available. ({$invalidItemsString})");
-        }
-    }
-
-    private function setOffers(): void
-    {
-        $offers = config('offers');
-        $items = $this->items->groupBy('name')->map->count();
-
-        foreach ($items as $name => $amount) {
-            if (array_key_exists($name, $offers)) {
-                $offer = $offers[$name];
-                $this->applyOffer($amount, $offer);
-            }
-        }
-    }
-
-    private function applyOffer(int $amount, array $offer): ?callable
-    {
-        if ($amount < $offer['should_buy']) return null;
-
-        $item = $this->items->where('name', $offer['item'])->whereNull('offer')->first();
-        if (!$item) return null;
-
-        $item->setProp(
-            'offer',
-            new Offer([
-                'title' => "{$offer['discount_percent']}% off {$offer['item']}",
-                'percent' => $offer['discount_percent']
-            ])
-        );
-
-        $amount = $amount - $offer['should_buy'];
-        if (!$amount) return null;
-        return $this->applyOffer($amount, $offer);
-    }
-
-    private function setTaxes(): void
-    {
-        $this->taxes = $this->items->sum('price') * config('taxes.vat');
     }
 }

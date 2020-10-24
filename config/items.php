@@ -12,15 +12,15 @@
 
 return [
     't-shirt' => [
-        'price' => 109900
+        'price' => 1099
     ],
     'pants' => [
-        'price' => 149900
+        'price' => 1499
     ],
     'jacket' => [
-        'price' => 199900
+        'price' => 1999
     ],
     'shoes' => [
-        'price' => 249900
+        'price' => 2499
     ],
 ];

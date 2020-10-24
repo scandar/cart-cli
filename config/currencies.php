@@ -14,11 +14,13 @@ return [
     'default' => 'usd',
     'available' => [
         'usd' => [
+            'name' => 'usd',
             'conversion_rate' => 1.0,
             'symbol' => '$',
             'format' => 'S#'
         ],
         'egp' => [
+            'name' => 'egp',
             'conversion_rate' => 15.7,
             'symbol' => 'e£',
             'format' => '# S'

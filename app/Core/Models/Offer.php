@@ -6,4 +6,5 @@ class Offer extends BaseModel
 {
     protected string $title;
     protected float $percent;
+    protected float $discount;
 }
