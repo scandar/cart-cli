@@ -17,7 +17,7 @@ class CartService
 
     private ?Currency $currency;
     private ?Collection $items;
-    private float $taxes = 0.0;
+    private float $taxes;
 
     public function create(array $items, string $currency): Output
     {
